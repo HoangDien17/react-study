@@ -1,6 +1,7 @@
-import { Alert, Button, IconButton, Tooltip } from "@material-tailwind/react";
+import { Button, IconButton, Tooltip } from "@material-tailwind/react";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { IItemExtra } from "../interfaces/item.interface";
 import { handleItemName } from "../utils/help";
 
 export default function Item({item, setCart, cart, setIsAdded}: any) {
@@ -18,17 +19,24 @@ export default function Item({item, setCart, cart, setIsAdded}: any) {
     });
   };
   
-  function addToCart(item: any) {
-    const newCart = new Set(cart)
-    newCart.add(item)
-    setCart(newCart)
-    setIsAdded(true)
+  function addToCart(item: IItemExtra) {
+    const oldCart = new Map<string, IItemExtra>(cart)
+    if(isCheckedItemExists(oldCart, item)) {
+      const oldItem = oldCart.get(item.Title) as IItemExtra
+      oldItem.quantity = oldItem.quantity + quantity
+      oldCart.set(item.Title, oldItem)
+      setCart(oldCart)
+    } else {
+      oldCart.set(item.Title, {...item, quantity: quantity})
+      setCart(oldCart)
+      setIsAdded(true)
+    }
     notify()
-    return (
-      <Alert color="green">A success alert for showing message.</Alert>
-    )
   }
 
+  function isCheckedItemExists(cart: Map<string, IItemExtra>, item: IItemExtra) {
+    return cart.has(item.Title)
+  }
   function onChangeQuantity(action: string) {
     if (action === "add") {
       if (quantity === 9) {
