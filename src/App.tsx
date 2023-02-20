@@ -1,80 +1,111 @@
-import { useEffect, useState } from "react";
-import Item from "./components/item.component";
-import { fetchData} from './services/item/item.service'
-import { Input } from "@material-tailwind/react";
-import NotFound from "./components/notFound.component";
-import useDebounce from "./hooks/useDebound";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCartShopping} from "@fortawesome/free-solid-svg-icons";
-import { ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
+
 import { IItem, IItemExtra } from "./interfaces/item.interface";
+import { useEffect, useState } from "react";
+
 import DialogCartDetail from "./components/dialog-cart-detail.component";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Input } from "@material-tailwind/react";
+import Item from "./components/item.component";
+import NotFound from "./components/notFound.component";
+import { ToastContainer } from "react-toastify";
+import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
+import { fetchData } from "./services/item/item.service";
+import useDebounce from "./hooks/useDebound";
 
 function App() {
-const [data, setData] = useState<any>([])
-const [search, setSearch] = useState<string>('fast')
-const [cart, setCart] = useState<Map<string, IItemExtra>>(new Map<string, IItemExtra>())
-const [isAdded, setIsAdded] = useState<boolean>(false)
+  const [data, setData] = useState<any>([]);
+  const [search, setSearch] = useState<string>("fast");
+  const [cart, setCart] = useState<Map<string, IItemExtra>>(
+    new Map<string, IItemExtra>()
+  );
+  const [isAdded, setIsAdded] = useState<boolean>(false);
 
-// handle to open cart detail
-const [open, setOpen] = useState(false);
-const handleOpen = () => setOpen(!open);
+  // handle to open cart detail
+  const [open, setOpen] = useState(false);
+  const handleOpen = () => setOpen(!open);
 
-const debouncedValue = useDebounce<string>(search, 300)
+  const debouncedValue = useDebounce<string>(search, 300);
 
-const onSearch = (e: any) => {
-  if(!e.target.value) {
-    setSearch('fast')
-  } else {
-    setSearch(e.target.value)
+  const onSearch = (e: any) => {
+    if (!e.target.value) {
+      setSearch("fast");
+    } else {
+      setSearch(e.target.value);
+    }
+  };
+
+  const getData = async (search: string) => {
+    const res: any = await fetchData(search);
+    if (Array.isArray(res.Search) && res.Search.length > 0) {
+      const newData = res?.Search.map((item: IItemExtra) => {
+        return {
+          ...item,
+          price: Math.floor(Math.random() * 10) + 1,
+          quantity: 0,
+        };
+      });
+      setData(newData);
+    } else {
+      setData([]);
+    }
+  };
+
+  function isCheckedData(data: any) {
+    return Array.isArray(data) && data.length > 0;
   }
-}
-
-const getData = async (search: string) => {
-  const res: any =  await fetchData(search)
-  if(Array.isArray(res.Search) && res.Search.length > 0) {
-    const newData = res?.Search.map((item: IItemExtra) => {
-      return {...item, price: Math.floor(Math.random() * 10) + 1, quantity: 0}
-    })
-    setData(newData)
-  } else {
-    setData([])
-  }
-}
-
-function isCheckedData(data: any) {
-  return Array.isArray(data) && data.length > 0
-}
 
   useEffect(() => {
-    getData(debouncedValue)
-  }, [debouncedValue])
+    getData(debouncedValue);
+  }, [debouncedValue]);
 
   return (
     <>
-    <div className="flex justify-around relative">
-      <h1 className="text-3xl font-bold p-12">
-        List of my favorite cinemas
-      </h1>
-      <div className="flex flex-col w-72 gap-6 justify-center items-center">
-        <Input label="Search" success onChange={onSearch}/>
+      <div className="pt-5 block md:flex md:justify-around md:relative px-4">
+        <h1 className="text-3xl font-bold xl:p-12 w-full pr-5 md:pr-0">
+          List of my favorite cinemas
+        </h1>
+        <div className="w-full my-5 flex flex-col xl:w-72 gap-6 justify-center items-center">
+          <Input label="Search" success onChange={onSearch} />
+        </div>
+        <div className="absolute top-7 right-4 md:relative md:top-0 md:right-0 md:ml-5 flex flex-col justify-center items-center">
+          <FontAwesomeIcon
+            icon={faCartShopping}
+            size="xl"
+            className="cursor-pointer"
+            onClick={handleOpen}
+          />
+          <DialogCartDetail
+            open={open}
+            handleOpen={handleOpen}
+            cart={cart}
+            setCart={setCart}
+          />
+          {cart.size > 0 && (
+            <div className="rounded-[50%] w-6 h-6 absolute mb-9 ml-8 cursor-default bg-red-600 text-white text-center">
+              {cart.size}
+            </div>
+          )}
+        </div>
       </div>
-      <div className="flex justify-center items-center">
-        <FontAwesomeIcon icon={faCartShopping} size="xl" className="cursor-pointer" onClick={handleOpen}/>
-        < DialogCartDetail open={open} handleOpen={handleOpen} cart={cart} setCart={setCart}/>
-        {cart.size > 0 && (<div className="rounded-[50%] w-6 h-6 absolute mb-9 ml-8 cursor-default bg-red-600 text-white text-center">{cart.size}</div>) }
-      </div>
-    </div>
 
-    {isCheckedData(data) ? (
-      <div className="inline-grid grid-cols-6">
-        {data.map((item: IItem, index: number) => (
-          <Item key={index} item={item} setCart={setCart} cart={cart} isAdded={isAdded} setIsAdded={setIsAdded}/>
-        ))}
-      </div>
-    ) : (< NotFound />) }
-    {isAdded && (<ToastContainer autoClose={8000} className="absolute"/>)}
+      {isCheckedData(data) ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 w-full px-4">
+          {data.map((item: IItem, index: number) => (
+            <Item
+              key={index}
+              item={item}
+              setCart={setCart}
+              cart={cart}
+              isAdded={isAdded}
+              setIsAdded={setIsAdded}
+            />
+          ))}
+        </div>
+      ) : (
+        <NotFound />
+      )}
+      {isAdded && <ToastContainer autoClose={8000} className="absolute" />}
     </>
   );
 }
