@@ -20,6 +20,7 @@ export default function Item({ item, setCart, cart, setIsAdded }: any) {
     });
   }
 
+  
   function addToCart(item: IItemExtra) {
     const oldCart = new Map<string, IItemExtra>(cart);
     if (isCheckedItemExists(oldCart, item)) {
