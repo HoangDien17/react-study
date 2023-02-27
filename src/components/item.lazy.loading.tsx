@@ -31,7 +31,7 @@ const ItemLazyLoading = () => (
         <span className="hidden">loading</span>
       </Button>
     </div>
-  </div>
+  </div >
 );
 
 export default ItemLazyLoading;
