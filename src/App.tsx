@@ -1,12 +1,13 @@
 import "react-toastify/dist/ReactToastify.css";
 
 import { IItem, IItemExtra } from "./interfaces/item.interface";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import DialogCartDetail from "./components/dialog-cart-detail.component";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Input } from "@material-tailwind/react";
 import Item from "./components/item.component";
+import ItemLazyLoading from "./components/item.lazy.loading";
 import NotFound from "./components/notFound.component";
 import { ToastContainer } from "react-toastify";
 import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
@@ -24,6 +25,7 @@ function App() {
   // handle to open cart detail
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(!open);
+  const [isLoading, setIsLoading] = useState(false);
 
   const debouncedValue = useDebounce<string>(search, 300);
 
@@ -36,24 +38,34 @@ function App() {
   };
 
   const getData = async (search: string) => {
-    const res: any = await fetchData(search);
-    if (Array.isArray(res.Search) && res.Search.length > 0) {
-      const newData = res?.Search.map((item: IItemExtra) => {
-        return {
-          ...item,
-          price: Math.floor(Math.random() * 10) + 1,
-          quantity: 0,
-        };
-      });
-      setData(newData);
-    } else {
-      setData([]);
+    try {
+      // set loading
+      setIsLoading(true);
+
+      const res: any = await fetchData(search);
+      if (Array.isArray(res.Search) && res.Search.length > 0) {
+        const newData = res?.Search.map((item: IItemExtra) => {
+          return {
+            ...item,
+            price: Math.floor(Math.random() * 10) + 1,
+            quantity: 0,
+          };
+        });
+        setData(newData);
+      } else {
+        setData([]);
+      }
+    } catch (error) {
+      // handle error here
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  function isCheckedData(data: any) {
-    return Array.isArray(data) && data.length > 0;
-  }
+  const hasMovies = useMemo(
+    () => Array.isArray(data) && data.length > 0,
+    [data]
+  );
 
   useEffect(() => {
     getData(debouncedValue);
@@ -88,8 +100,13 @@ function App() {
           )}
         </div>
       </div>
-
-      {isCheckedData(data) ? (
+      {isLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 w-full px-4">
+          {Array.from(Array(10).keys()).map((i) => (
+            <ItemLazyLoading key={i} />
+          ))}
+        </div>
+      ) : hasMovies ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 w-full px-4">
           {data.map((item: IItem, index: number) => (
             <Item
@@ -105,6 +122,22 @@ function App() {
       ) : (
         <NotFound />
       )}
+
+      {/* 
+      {!isLoading && isCheckedData(data) && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 w-full px-4">
+          {data.map((item: IItem, index: number) => (
+            <Item
+              key={index}
+              item={item}
+              setCart={setCart}
+              cart={cart}
+              isAdded={isAdded}
+              setIsAdded={setIsAdded}
+            />
+          ))}
+        </div>
+      )} */}
       {isAdded && <ToastContainer autoClose={8000} className="absolute" />}
     </>
   );

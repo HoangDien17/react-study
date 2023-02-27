@@ -20,7 +20,6 @@ export default function Item({ item, setCart, cart, setIsAdded }: any) {
     });
   }
 
-  
   function addToCart(item: IItemExtra) {
     const oldCart = new Map<string, IItemExtra>(cart);
     if (isCheckedItemExists(oldCart, item)) {
@@ -58,12 +57,12 @@ export default function Item({ item, setCart, cart, setIsAdded }: any) {
   }
 
   return (
-    <div className="item rounded-lg shadow-lg bg-purple-50 border-solid relative">
-      <div className="item__image before:w-full before:h-0 pt-[150%] before:absolute before:top-0 before:left-0">
+    <div className="item rounded-lg shadow-lg bg-purple-50 border-solid">
+      <div className="item__image before:w-full before:h-0 pt-[150%] relative">
         <img
           src={item.Poster}
-          alt="item"
-          className="absolute top-0 left-0 w-full object-cover bg-gradient-to-t rounded-tl-lg rounded-tr-lg"
+          alt={item.Title}
+          className="absolute top-0 left-0 w-full object-cover bg-gradient-to-t rounded-tl-lg rounded-tr-lg h-full"
         />
       </div>
       <div className="item__info p-2">
